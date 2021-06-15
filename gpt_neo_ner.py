@@ -151,25 +151,9 @@ print(len(label_list))
 
 from transformers import AutoModelForTokenClassification, TrainingArguments, Trainer,GPTNeoConfig
 
-#model = GPTNeoModel.from_pretrained('EleutherAI/gpt-neo-1.3B')
-configuration = GPTNeoConfig()
 
 model = TokenClassificationForGPT(gpt_model_name="EleutherAI/gpt-neo-1.3B",num_labels=len(label_list),hidden_size=2048)
 
-
-#model = TokenClassificationForGPT(model_name="EleutherAI/gpt-neo-1.3B",num_labels=len(label_list))
-
-A=T.tensor([tokenized_datasets["train"]["input_ids"][0]])
-B=T.tensor([tokenized_datasets["train"]["labels"][0]])
-print(A,B)
-
-x = T.tensor([[1,2,3,4]])
-
-#W=model.gptneo(x)
-W=model.forward(A,labels=B)
-#prediction=model.fc1(W)
-#prediction
-W
 
 metric = load_metric("seqeval")
 
@@ -216,17 +200,20 @@ batch_size = 128
 args = TrainingArguments(
     "test-ner",
     evaluation_strategy = "epoch",
-    learning_rate=2e-5,
+    learning_rate=2e-4,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
     num_train_epochs=1,
     weight_decay=0.01,
 )
 
+
+small_training_set=tokenized_datasets["train"][1:100]
+
 trainer = Trainer(
     model,
     args,
-    train_dataset=tokenized_datasets["train"],
+    train_dataset=small_training_set,
     eval_dataset=tokenized_datasets["validation"],
     data_collator=data_collator,
     tokenizer=tokenizer,
@@ -235,4 +222,5 @@ trainer = Trainer(
 
 trainer.train()
 
+trainer.save_model("backup/model")
 """# Autre facon de train"""
