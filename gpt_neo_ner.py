@@ -8,6 +8,7 @@ Original file is located at
 """
 
 
+
 from transformers import TFAutoModelForTokenClassification, AutoTokenizer,GPT2Tokenizer, GPTNeoModel
 import tensorflow as tf
 from datasets import load_dataset, load_metric
@@ -152,7 +153,8 @@ from transformers import DataCollatorForTokenClassification
 
 data_collator = DataCollatorForTokenClassification(tokenizer)
 
-small_tokenized_datasets=tokenized_datasets["train"].select(range(100))
+small_tokenized_datasets_train=tokenized_datasets["train"].select(range(100))
+small_tokenized_datasets_validation=tokenized_datasets["validation"].select(range(100))
 
 type(tokenized_datasets["train"])
 
@@ -177,6 +179,7 @@ trainer = Trainer(
     model,
     args,
     train_dataset=small_tokenized_datasets,
+    eval_dataset=small_tokenized_datasets_validation,
     data_collator=data_collator,
     tokenizer=tokenizer,
     compute_metrics=compute_metrics
