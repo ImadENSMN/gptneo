@@ -222,5 +222,5 @@ trainer = Trainer(
 
 trainer.train()
 
-trainer.save_model("backup/model")
+trainer.save_model("backup_model")
 """# Autre facon de train"""
