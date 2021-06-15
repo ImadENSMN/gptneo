@@ -8,7 +8,6 @@ Original file is located at
 """
 
 
-
 from transformers import TFAutoModelForTokenClassification, AutoTokenizer,GPT2Tokenizer, GPTNeoModel
 import tensorflow as tf
 from datasets import load_dataset, load_metric
@@ -22,9 +21,6 @@ datasets["train"][0]
 """# Chargement du modele"""
 
 tokenizer = AutoTokenizer.from_pretrained('EleutherAI/gpt-neo-1.3B', add_prefix_space=True)
-#tokenizer = AutoTokenizer.from_pretrained('EleutherAI/gpt-neo-1.3B',bos_token='<|startoftext|>',eos_token="<|startoftext|>",pad_token="<|pad|>",add_prefix_space=True)
-#tokenizer = GPT2Tokenizer.from_pretrained("EleutherAI/gpt-neo-1.3B")
-#tokenizer = AutoTokenizer.from_pretrained('EleutherAI/gpt-neo-1.3B',add_prefix_space=True,pad_token="<|pad|>")
 
 def tokenize_and_align_labels(examples):
   
@@ -91,28 +87,6 @@ import torch as T
 
 import torch.nn as nn
 
-'''
-class TokenClassificationForGPT(nn.Module):
-    def __init__(self, hidden_size: int, num_labels:int, gpt_model_name:str):
-        super(TokenClassificationForGPT,self).__init__()
-        self.gptneo = GPTNeoModel.from_pretrained(gpt_model_name)
-        self.fc1 = nn.Linear(hidden_size, num_labels)
-        
-    def forward(self,input_ids=None,attention_mask=None,token_type_ids=None,position_ids=None,head_mask=None,inputs_embeds=None,labels=None,output_attentions=None,output_hidden_states=None,return_dict=None):
-        """
-        Args:
-                x_in: encoded inputs ids of sent.
-        """
-        
-        gpt_out = self.gptneo(input_ids)[0] #returns tuple
-        #batch_size = gpt_out.shape[0]
-        prediction_vector = self.fc1(gpt_out) #(batch_size , max_len, num_classes)
-
-
-    
-        return prediction_vector
-'''
-
 class TokenClassificationForGPT(nn.Module):
     def __init__(self, hidden_size: int, num_labels:int, gpt_model_name:str):
         super(TokenClassificationForGPT,self).__init__()
@@ -143,26 +117,12 @@ class TokenClassificationForGPT(nn.Module):
         output = (logits,) + outputs[2:]
         return ((loss,) + output) if loss is not None else output
 
-"""# Model finetuning"""
-
-label_list = datasets["train"].features["ner_tags"].feature.names
-print(label_list)
-print(len(label_list))
-
 from transformers import AutoModelForTokenClassification, TrainingArguments, Trainer,GPTNeoConfig
 
 
 model = TokenClassificationForGPT(gpt_model_name="EleutherAI/gpt-neo-1.3B",num_labels=len(label_list),hidden_size=2048)
 
-
 metric = load_metric("seqeval")
-
-label_list
-
-example=datasets['train'][0]
-print(example["ner_tags"])
-labels = [label_list[i] for i in example["ner_tags"]]
-metric.compute(predictions=[labels], references=[labels])
 
 def compute_metrics(p):
     predictions, labels = p
@@ -192,11 +152,17 @@ from transformers import DataCollatorForTokenClassification
 
 data_collator = DataCollatorForTokenClassification(tokenizer)
 
+small_tokenized_datasets=tokenized_datasets["train"].select(range(100))
+
+type(tokenized_datasets["train"])
+
+type(small_tokenized_datasets)
+
 tokenizer
 
 tokenizer.pad_token = -100
 
-batch_size = 64
+batch_size = 32
 args = TrainingArguments(
     "test-ner",
     evaluation_strategy = "epoch",
@@ -207,13 +173,10 @@ args = TrainingArguments(
     weight_decay=0.01,
 )
 
-
-small_training_set=tokenized_datasets["train"][1:100]
-
 trainer = Trainer(
     model,
     args,
-    train_dataset=small_training_set,
+    train_dataset=small_tokenized_datasets,
     eval_dataset=tokenized_datasets["validation"],
     data_collator=data_collator,
     tokenizer=tokenizer,
@@ -221,6 +184,3 @@ trainer = Trainer(
 )
 
 trainer.train()
-
-trainer.save_model("backup_model")
-"""# Autre facon de train"""
