@@ -177,7 +177,6 @@ trainer = Trainer(
     model,
     args,
     train_dataset=small_tokenized_datasets,
-    eval_dataset=tokenized_datasets["validation"],
     data_collator=data_collator,
     tokenizer=tokenizer,
     compute_metrics=compute_metrics
