@@ -212,7 +212,7 @@ tokenizer
 
 tokenizer.pad_token = -100
 
-batch_size = 1
+batch_size = 128
 args = TrainingArguments(
     "test-ner",
     evaluation_strategy = "epoch",
